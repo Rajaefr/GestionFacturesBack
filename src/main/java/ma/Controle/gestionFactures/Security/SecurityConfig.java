@@ -18,15 +18,17 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 public class SecurityConfig {
 
-
     private final JwtAuthEntryPoint authEntryPoint;
     private final CustomUserDetailsService userDetailsService;
+    private final JWTGenerator jwtGenerator;
 
     @Autowired
     public SecurityConfig(CustomUserDetailsService userDetailsService,
-                          JwtAuthEntryPoint authEntryPoint) {
+                          JwtAuthEntryPoint authEntryPoint,
+                          JWTGenerator jwtGenerator) {
         this.userDetailsService = userDetailsService;
         this.authEntryPoint = authEntryPoint;
+        this.jwtGenerator = jwtGenerator;
     }
 
     @Bean
@@ -38,10 +40,8 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))  // Stateless session management for JWT
                 .authorizeRequests(authorize -> authorize
-                        .requestMatchers("/api/auth/**").permitAll()  // Public authentication endpoints (login, register)
-                        .requestMatchers("/api/factures/**").permitAll()  // Public factures API
-                        .requestMatchers("/api/paiements/**").permitAll()
-                        .requestMatchers("/").permitAll() // Public paiements API (if applicable)
+                       .requestMatchers("/factures", "/paiements").authenticated()  // Secure paiements API (if applicable)
+                        .requestMatchers("/", "/login", "/register","api/auth/**").permitAll()
                         .anyRequest().authenticated())  // Other requests require authentication
                 .httpBasic(Customizer.withDefaults());  // Basic authentication (if needed)
 
@@ -61,7 +61,6 @@ public class SecurityConfig {
 
     @Bean
     public JWTAuthentificationFilter jwtAuthentificationFilter(){
-        return new JWTAuthentificationFilter();
+        return new JWTAuthentificationFilter(jwtGenerator, userDetailsService);
     }
-
 }

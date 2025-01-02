@@ -4,8 +4,10 @@ package ma.Controle.gestionFactures.entities;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 
+import java.time.LocalDate;
 import java.util.Date;
 
+@Table(name = "paiement")
 @Entity
 public class Paiement {
 
@@ -16,8 +18,7 @@ public class Paiement {
 
     @NotNull
     @Temporal(TemporalType.DATE)
-    private Date date;
-
+    private LocalDate date;
 
     private Double montant;
 
@@ -54,13 +55,12 @@ public class Paiement {
         this.facture = facture;
     }
 
-    public Date getDate() {
+    public LocalDate getDate() {
         return date;
     }
 
-    public void setDate(Date date) {
+    public void setDate(LocalDate date) {
         this.date = date;
     }
-
 
 }
