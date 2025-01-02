@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Facture List</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            background-image: url('https://assets.intia.fr/app/uploads/2021/01/facture-1440x960.jpg');
+            background-size: cover;
+            background-position: center;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+        }
+        .container {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+             max-width: 75%;;
+            width: 100%;
+            color: #ffffff;
+        }
+        .search-container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1);
+        }
+        .table tbody tr:nth-child(odd) {
+    background-color: rgba(255, 255, 255, 0.6) ;
+    color: #ffffff ;
+}
+
+.table tbody tr:nth-child(even) {
+    background-color: rgba(0, 0, 0, 0.6);
+    color: #ffffff;
+}
+
+
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="search-container">
+        <form th:action="@{/search}" method="get" class="d-flex">
+            <input type="text" name="categorie" class="form-control me-2" placeholder="Rechercher par categorie">
+            <button type="submit" class="btn btn-primary">Rechercher</button>
+        </form>
+    </div>
+    <div th:switch="${factures}">
+        <h2 th:case="null" class="text-danger">No Factures yet!</h2>
+        <div th:case="*">
+            <h2>Factures</h2>
+            <table class="table table-bordered table-striped">
+                <thead class="table-dark">
+                <tr>
+                    <th>Catégorie</th>
+                    <th>Date</th>
+                    <th>Montant</th>
+                    <th>Montant Restant</th>
+                    <th>Etat de la Facture</th>
+                    <th>Ajouter un paiement</th>
+                    <th>Modifier</th>
+                    <th>Supprimer</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="facture : ${factures}" style="color: #ffffff">
+                    <td th:text="${facture.categorie}"></td>
+                    <td th:text="${#dates.format(facture.date, 'dd/MM/yyyy')}"></td>
+                    <td th:text="${facture.montant}"></td>
+                    <td th:text="${facture.getMontantRestant()}"></td>
+                    <td th:text="${facture.etat}"></td>
+                    <td><a th:href="@{/list-paiement/{factureId}(factureId=${facture.id})}" class="btn btn-success">Paiements </a>
+                    </td>
+                    <td><a th:href="@{/update/{id}(id=${facture.id})}" class="btn btn-warning btn-sm">Modifier</a></td>
+                    <td><a th:href="@{/delete/{id}(id=${facture.id})}" class="btn btn-danger btn-sm">Supprimer</a></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <p>
+            <a href="/addfacture" class="btn btn-primary">Ajouter une facture</a>
+        </p>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
