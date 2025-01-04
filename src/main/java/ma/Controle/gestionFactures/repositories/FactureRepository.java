@@ -13,6 +13,6 @@ public interface FactureRepository extends CrudRepository<Facture, Long> {
     List<Facture> findByCategorieContainingIgnoreCase(String categorie);
 
     List<Facture> findByUser_Username(String username);
-
+    List<Facture> findAll();
 
 }

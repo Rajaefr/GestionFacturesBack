@@ -16,14 +16,14 @@ public class Paiement {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull
-    @Temporal(TemporalType.DATE)
+    @NotNull(message = "La date de paiement est obligatoire")
     private LocalDate date;
 
+    @NotNull(message = "Le montant est obligatoire")
     private Double montant;
 
     @ManyToOne
-    @JoinColumn(name = "factureId")
+    @JoinColumn(name = "facture_id")
     private Facture facture;
 
 
@@ -55,12 +55,12 @@ public class Paiement {
         this.facture = facture;
     }
 
-    public LocalDate getDate() {
+
+    public @NotNull(message = "La date de paiement est obligatoire") LocalDate getDate() {
         return date;
     }
 
-    public void setDate(LocalDate date) {
+    public void setDate(@NotNull(message = "La date de paiement est obligatoire") LocalDate date) {
         this.date = date;
     }
-
 }

@@ -62,9 +62,14 @@ public class AuthController {
             return new ResponseEntity<>("Username is taken", HttpStatus.BAD_REQUEST);
         }
 
+        if (userRepository.existsByEmail(registerDto.getEmail())) {  // Check if email is taken
+            return new ResponseEntity<>("Email is taken", HttpStatus.BAD_REQUEST);
+        }
+
         UserEntity user = new UserEntity();
         user.setUsername(registerDto.getUsername());
         user.setPassword(passwordEncoder.encode(registerDto.getPassword()));
+        user.setEmail(registerDto.getEmail());  // Set the email
 
         Optional<Roles> optionalRole = roleRepository.findByName("USER");
         if (!optionalRole.isPresent()) {
@@ -72,16 +77,13 @@ public class AuthController {
         }
 
         Roles role = optionalRole.get();
-        // Merging the role if it's detached
-        role = roleRepository.save(role);  // This line ensures the role is attached to the session
+        role = roleRepository.save(role);  // Ensure the role is attached to the session
 
-        // Setting the role to the user
         user.setRoles(Collections.singletonList(role));
-
-        // Saving the user
         userRepository.save(user);
 
         return new ResponseEntity<>("User registered successfully!", HttpStatus.OK);
     }
+
 
 }

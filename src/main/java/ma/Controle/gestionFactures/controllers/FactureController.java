@@ -14,8 +14,13 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Date;
+
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Controller
 public class FactureController {
@@ -136,5 +141,44 @@ public class FactureController {
 
         model.addAttribute("factures", factureRepository.findByUser_Username(facture.getUser().getUsername()));
         return "redirect:/factures";
+    }@GetMapping("/factures-echeance-proche")
+    public String getFacturesEcheanceProche(Model model) {
+        // Current date and threshold date (7 days ahead)
+        LocalDate currentDate = LocalDate.now();
+        LocalDate thresholdDate = currentDate.plusDays(7); // 7 days from now
+
+        // Retrieve all invoices from the repository
+        List<Facture> allFactures = factureRepository.findAll();
+
+        // Filter the invoices based on the upcoming due date
+        List<Facture> facturesEcheanceProche = allFactures.stream()
+                .filter(facture -> {
+                    Date dateEcheance = facture.getDate(); // Get the due date
+
+                    // Skip if the due date is null
+                    if (dateEcheance == null) {
+                        return false;
+                    }
+
+                    // Convert java.sql.Date to java.util.Date
+                    java.util.Date utilDate = new java.util.Date(dateEcheance.getTime());
+
+                    // Convert java.util.Date to LocalDate
+                    LocalDate dateEcheanceLocal = utilDate.toInstant()
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate();
+
+                    // Check if the due date is within the range (from today to 7 days ahead)
+                    return !dateEcheanceLocal.isBefore(currentDate) && dateEcheanceLocal.isBefore(thresholdDate);
+                })
+                .collect(Collectors.toList());
+
+        model.addAttribute("facturesEcheanceProche", facturesEcheanceProche);
+
+        return "factures-echeance-proche"; // Return the view
     }
+
+
 }
+
+

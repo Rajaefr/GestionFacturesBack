@@ -6,6 +6,7 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Repository
@@ -14,4 +15,8 @@ public interface PaiementRepository extends CrudRepository<Paiement, Long> {
     Double sumMontantByFactureId(@Param("factureId") Long factureId);
 
     List<Paiement> findByFactureId(Long factureId);
+
+    @Query("SELECT p FROM Paiement p WHERE p.date BETWEEN :startDate AND :endDate")
+    List<Paiement> findByDateBetween(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
 }
