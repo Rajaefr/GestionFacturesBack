@@ -118,9 +118,9 @@ public class Facture {
     public String getEtat() {
         double montantRestant = getMontantRestant();
         if (montantRestant == 0) {
-            return "Complète";
+            return "Paid";
         } else {
-            return "Incomplète";
+            return "Unpaid";
         }
     }
 

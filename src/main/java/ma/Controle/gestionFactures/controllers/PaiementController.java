@@ -23,6 +23,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.security.Principal;
+
+
+
 
 @Controller
 public class PaiementController {
@@ -34,6 +38,8 @@ public class PaiementController {
 
     @Autowired
     private FactureRepository factureRepository;
+
+    @CrossOrigin(origins = "http://localhost:3000")
 
     @GetMapping("/list-paiement/{factureId}")
     public String listPaiements(@PathVariable Long factureId, Model model) {
@@ -156,58 +162,65 @@ public class PaiementController {
         double montantRestant = facture.getMontant() - montantPaye;
         facture.setMontantRestant(montantRestant);
 
-        facture.setEtat(montantRestant == 0 ? "Complète" : "Incomplète");
+        facture.setEtat(montantRestant == 0 ? "Paid" : "Unpaid");
         factureRepository.save(facture);
         logger.info("Facture status updated for facture ID: {} - Remaining: {}, Status: {}",
                 factureId, montantRestant, facture.getEtat());
     }
 
+
+
     @GetMapping("/paiements-categories")
-    public String getPaiementsByCategoryForCurrentMonth(Model model) {
-        // Get the current month
+    public ResponseEntity<List<PaymentCategorySummary>> getPaiementsByCategoryForCurrentMonth(Principal principal) {
+        if (principal == null) {
+            logger.error("User is not authenticated");
+            throw new IllegalStateException("User is not authenticated");
+        }
+
+
+        String username = principal.getName();
+        logger.debug("Authenticated username: {}", username);
+
         LocalDate now = LocalDate.now();
         Month currentMonth = now.getMonth();
+        LocalDate startDate= LocalDate.of(now.getYear(), currentMonth, 1);
+        LocalDate endDate= LocalDate.of(now.getYear(), currentMonth, now.lengthOfMonth());
+        logger.debug("Fetching paiements for user: {}, startDate: {}, endDate: {}", username, startDate, endDate);
 
-        // Fetch payments for the current month
-        List<Paiement> paiements = paiementRepository.findByDateBetween(
-                LocalDate.of(now.getYear(), currentMonth, 1),
-                LocalDate.of(now.getYear(), currentMonth, now.lengthOfMonth())
+        // Fetch payments for the current user and current month
+        List<Paiement> paiements = paiementRepository.findByUserAndDateBetween(
+                username,
+                startDate,
+                 endDate
         );
 
         // Group paiements by category and calculate the total and remaining amounts
         Map<String, PaymentCategorySummary> categorySummaryMap = new HashMap<>();
 
         for (Paiement paiement : paiements) {
-            // Assuming Facture has a 'categorie' field that represents the category of the payment
             String category = paiement.getFacture().getCategorie();
             double amountPaid = paiement.getMontant();
             double totalAmountForCategory = paiement.getFacture().getMontant();
 
-            // Initialize PaymentCategorySummary for this category if not already done
             categorySummaryMap.putIfAbsent(category, new PaymentCategorySummary(category));
             PaymentCategorySummary categorySummary = categorySummaryMap.get(category);
 
-            // Add the paid amount
             categorySummary.addPaidAmount(amountPaid);
 
-            // Set the total amount if it's the first time processing this category
             if (categorySummary.getTotalAmount() == 0) {
                 categorySummary.setTotalAmount(totalAmountForCategory);
             }
 
-            // Calculate the remaining amount
             double remainingAmount = categorySummary.getTotalAmount() - categorySummary.getPaidAmount();
             categorySummary.setRemainingAmount(remainingAmount);
         }
 
-        // Convert the map to a list for easier handling in the view
         List<PaymentCategorySummary> categorySummaries = new ArrayList<>(categorySummaryMap.values());
 
-        // Add the summary to the model
-        model.addAttribute("categorySummaries", categorySummaries);
-
-        return "paiements-categories"; // Thymeleaf view name (you'll need to create the HTML view)
+        // Return the data as JSON
+        return ResponseEntity.ok(categorySummaries);
     }
+
 
 
 }

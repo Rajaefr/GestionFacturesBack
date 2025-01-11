@@ -1,6 +1,7 @@
 package ma.Controle.gestionFactures.Security;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -39,9 +40,10 @@ public class SecurityConfig {
                         .authenticationEntryPoint(authEntryPoint))  // Entry point for unauthorized access
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))  // Stateless session management for JWT
-                .authorizeRequests(authorize -> authorize
-                       .requestMatchers("/factures", "/paiements").authenticated()  // Secure paiements API (if applicable)
-                        .requestMatchers("/", "/login", "/register","api/auth/**").permitAll()
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/factures", "/paiements", "/factures-echeance-proche", "/paiements-categories", "/addfacture").authenticated()  // Secure API
+                        .requestMatchers("/", "/login", "/register", "/api/auth/**").permitAll()  // Public endpoints
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()  // Allow OPTIONS for CORS preflight
                         .anyRequest().authenticated())  // Other requests require authentication
                 .httpBasic(Customizer.withDefaults());  // Basic authentication (if needed)
 
@@ -60,7 +62,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public JWTAuthentificationFilter jwtAuthentificationFilter(){
+    public JWTAuthentificationFilter jwtAuthentificationFilter() {
         return new JWTAuthentificationFilter(jwtGenerator, userDetailsService);
     }
 }

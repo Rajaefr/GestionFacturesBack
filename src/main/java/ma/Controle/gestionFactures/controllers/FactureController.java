@@ -8,6 +8,7 @@ import ma.Controle.gestionFactures.repositories.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -22,6 +23,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+
+
 @Controller
 public class FactureController {
 
@@ -32,6 +35,11 @@ public class FactureController {
 
     @Autowired
     private UserRepository userRepository;
+
+
+
+    @CrossOrigin(origins = "http://localhost:3000")
+
 
     @GetMapping("/")
     public String accueil() {
@@ -61,19 +69,21 @@ public class FactureController {
     @GetMapping("/addfacture")
     public String showAddFacturePage(Model model) {
         model.addAttribute("facture", new Facture());
+        model.addAttribute("categories", List.of("Transportation", "Housing", "Healthcare", "Obligation")); // Adjust categories as needed
         return "addfacture";
     }
 
     @PostMapping("/addfacture")
     public String addFacture(@Valid @ModelAttribute Facture facture, BindingResult result, Principal principal, Model model) {
         logger.info("Received request to add facture: {}", facture);
-        logger.info("Facture received: {}", facture);
-        logger.info("Facture date: {}", facture.getDate());
-        logger.info("Facture object sent to template: {}", model.getAttribute("facture"));
+       // logger.info("Facture received: {}", facture);
+       // logger.info("Facture date: {}", facture.getDate());
+      //  logger.info("Facture object sent to template: {}", model.getAttribute("facture"));
 
 
         if (result.hasErrors()) {
             logger.error("Facture validation errors: {}", result.getAllErrors());
+            model.addAttribute("categories", List.of("Transportation", "Housing", "Healthcare", "Obligation")); // Populate categories again on validation failure
             model.addAttribute("facture", facture);
             return "addfacture";
         }
@@ -141,17 +151,27 @@ public class FactureController {
 
         model.addAttribute("factures", factureRepository.findByUser_Username(facture.getUser().getUsername()));
         return "redirect:/factures";
-    }@GetMapping("/factures-echeance-proche")
-    public String getFacturesEcheanceProche(Model model) {
-        // Current date and threshold date (7 days ahead)
-        LocalDate currentDate = LocalDate.now();
-        LocalDate thresholdDate = currentDate.plusDays(7); // 7 days from now
+    }
 
-        // Retrieve all invoices from the repository
-        List<Facture> allFactures = factureRepository.findAll();
+    @GetMapping("/factures-echeance-proche")
+    public ResponseEntity<List<Facture>> getFacturesEcheanceProche(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            Principal principal) {
+        if (principal == null) {
+            logger.error("User is not authenticated");
+            throw new IllegalStateException("User is not authenticated");
+        }
+
+        String username = principal.getName();
+        LocalDate currentDate = LocalDate.now();
+        LocalDate thresholdDate = currentDate.plusDays(7);
+
+        // Retrieve invoices for the authenticated user
+        List<Facture> userFactures = factureRepository.findByUser_Username(username);
 
         // Filter the invoices based on the upcoming due date
-        List<Facture> facturesEcheanceProche = allFactures.stream()
+        List<Facture> facturesEcheanceProche = userFactures.stream()
                 .filter(facture -> {
                     Date dateEcheance = facture.getDate(); // Get the due date
 
@@ -173,10 +193,18 @@ public class FactureController {
                 })
                 .collect(Collectors.toList());
 
-        model.addAttribute("facturesEcheanceProche", facturesEcheanceProche);
+        // Pagination logic
+        int start = page * size;
+        int end = Math.min(start + size, facturesEcheanceProche.size());
 
-        return "factures-echeance-proche"; // Return the view
+        // Return a paginated list as JSON
+        if (start >= facturesEcheanceProche.size()) {
+            return ResponseEntity.ok(List.of()); // Return empty list for out-of-range pages
+        } else {
+            return ResponseEntity.ok(facturesEcheanceProche.subList(start, end));
+        }
     }
+
 
 
 }
