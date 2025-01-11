@@ -1,11 +1,14 @@
 package ma.Controle.gestionFactures.entities;
-
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.util.Date;
+
 
 @Table(name = "paiement")
 @Entity
@@ -22,12 +25,20 @@ public class Paiement {
     @NotNull(message = "Le montant est obligatoire")
     private Double montant;
 
+
+    @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "facture_id")
     private Facture facture;
 
 
     public Paiement() {
+    }
+
+    public Paiement(Long id, LocalDate date, Double montant) {
+        this.id = id;
+        this.date = date;
+        this.montant = montant;
     }
 
     public Long getId() {

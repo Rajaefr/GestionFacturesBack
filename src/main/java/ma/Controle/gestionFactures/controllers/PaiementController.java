@@ -170,7 +170,7 @@ public class PaiementController {
 
 
 
-    @GetMapping("/paiements-categories")
+    @GetMapping("/api/paiements-categories")
     public ResponseEntity<List<PaymentCategorySummary>> getPaiementsByCategoryForCurrentMonth(Principal principal) {
         if (principal == null) {
             logger.error("User is not authenticated");

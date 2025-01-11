@@ -1,5 +1,5 @@
 package ma.Controle.gestionFactures.entities;
-
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -30,6 +30,7 @@ public class Facture {
 
     private String categorie;
 
+    @JsonManagedReference
     @OneToMany(mappedBy = "facture", cascade = CascadeType.ALL)
     private List<Paiement> paiements;
 

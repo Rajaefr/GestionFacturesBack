@@ -2,8 +2,10 @@ package ma.Controle.gestionFactures.controllers;
 
 import jakarta.validation.Valid;
 import ma.Controle.gestionFactures.entities.Facture;
+import ma.Controle.gestionFactures.entities.Paiement;
 import ma.Controle.gestionFactures.entities.UserEntity;
 import ma.Controle.gestionFactures.repositories.FactureRepository;
+import ma.Controle.gestionFactures.repositories.PaiementRepository;
 import ma.Controle.gestionFactures.repositories.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +37,8 @@ public class FactureController {
 
     @Autowired
     private UserRepository userRepository;
-
+    @Autowired
+    private PaiementRepository paiementRepository;
 
 
     @CrossOrigin(origins = "http://localhost:3000")
@@ -153,7 +156,7 @@ public class FactureController {
         return "redirect:/factures";
     }
 
-    @GetMapping("/factures-echeance-proche")
+    @GetMapping("/api/factures-echeance-proche")
     public ResponseEntity<List<Facture>> getFacturesEcheanceProche(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -201,10 +204,18 @@ public class FactureController {
         if (start >= facturesEcheanceProche.size()) {
             return ResponseEntity.ok(List.of()); // Return empty list for out-of-range pages
         } else {
-            return ResponseEntity.ok(facturesEcheanceProche.subList(start, end));
+            List<Facture> paginatedFactures = facturesEcheanceProche.subList(start, end);
+
+            // Include paiements with factures in the response
+            paginatedFactures.forEach(facture -> {
+                List<Paiement> paiementsForFacture = paiementRepository.findByFactureId(facture.getId());
+                paiementsForFacture.forEach(paiement -> paiement.setFacture(facture));  // Ensure facture is set
+                facture.setPaiements(paiementsForFacture);
+            });
+
+            return ResponseEntity.ok(paginatedFactures);
         }
     }
-
 
 
 }
