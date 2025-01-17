@@ -27,7 +27,7 @@ public class Paiement {
 
 
     @JsonBackReference
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "facture_id")
     private Facture facture;
 
@@ -35,11 +35,6 @@ public class Paiement {
     public Paiement() {
     }
 
-    public Paiement(Long id, LocalDate date, Double montant) {
-        this.id = id;
-        this.date = date;
-        this.montant = montant;
-    }
 
     public Long getId() {
         return id;

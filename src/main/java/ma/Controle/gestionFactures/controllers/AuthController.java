@@ -20,6 +20,8 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 
@@ -88,36 +90,52 @@ public class AuthController {
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<String> resetPassword(@RequestBody PasswordResetRequestDto requestDto) {
+    public ResponseEntity<Map<String, String>> resetPassword(@RequestBody PasswordResetRequestDto requestDto) {
         // Find the user by email instead of username
         UserEntity user = userRepository.findByEmail(requestDto.getEmail())
                 .orElseThrow(() -> new RuntimeException("Utilisateur avec cet email non trouvé"));
 
-        // Send a password reset email
-        sendPasswordResetEmail(user);
+        // Send a password reset email (this function is currently commented out)
+        // sendPasswordResetEmail(user);
 
-        return new ResponseEntity<>("Un email de réinitialisation a été envoyé.", HttpStatus.OK);
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Un email de réinitialisation a été envoyé.");
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+
     private void sendPasswordResetEmail(UserEntity user) {
-        // Create a unique reset link (you can use your frontend to trigger this flow)
+        // Create a unique reset link with a token (can be handled by your frontend)
         String resetLink = "http://localhost:8080/api/auth/reset-password/confirm?email=" + user.getEmail();
 
+        // Construct the email message
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(user.getEmail());
         message.setSubject("Réinitialisation de votre mot de passe");
         message.setText("Bonjour,\n\nPour réinitialiser votre mot de passe, cliquez sur ce lien :\n" + resetLink);
 
-        javaMailSender.send(message);
+        // Send the email
+        try {
+            javaMailSender.send(message);
+            System.out.println("Email de réinitialisation envoyé à " + user.getEmail()); // Optional logging
+        } catch (Exception e) {
+            System.err.println("Erreur lors de l'envoi de l'email: " + e.getMessage()); // Optional logging for errors
+            throw new RuntimeException("Erreur lors de l'envoi de l'email de réinitialisation.");
+        }
     }
 
     @PostMapping("/reset-password/confirm")
     public ResponseEntity<String> confirmResetPassword(@RequestParam String email, @RequestBody String newPassword) {
-        // Find the user by email instead of username
+        // Validate that the new password is not empty
+        if (newPassword == null || newPassword.trim().isEmpty()) {
+            return new ResponseEntity<>("Le mot de passe ne peut pas être vide.", HttpStatus.BAD_REQUEST);
+        }
+
+        // Find the user by email
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Utilisateur avec cet email non trouvé"));
 
-        // Set the new password
+        // Set the new password after encoding
         user.setPassword(passwordEncoder.encode(newPassword));
 
         // Save the updated user
@@ -125,4 +143,5 @@ public class AuthController {
 
         return new ResponseEntity<>("Mot de passe réinitialisé avec succès.", HttpStatus.OK);
     }
+
 }

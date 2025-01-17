@@ -6,13 +6,13 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
+
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:3000")  // Make sure this matches the frontend URL
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")  // Include OPTIONS for preflight
-                .allowedHeaders("Authorization", "Content-Type")
-                .allowCredentials(true);  // Allow credentials if needed (cookies, tokens)
+                .allowedOrigins("http://localhost:3000") // Frontend origin
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // Allowed methods
+                .allowedHeaders("*") // Allow all headers
+                .allowCredentials(true); // Enable credentials
     }
-
 }
