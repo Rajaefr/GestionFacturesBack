@@ -4,7 +4,7 @@
 ## **Description**  
 Ce projet représente le **backend** du système de gestion des factures personnelles, développé avec **Spring Boot**. Il fournit une API REST permettant la gestion des factures et des paiements.  
 
-ℹ️ **Le frontend du projet est disponible ici** 👉 [Rajaefr/GestionFacturesFront](https://github.com/Rajaefr/GestionFacturesFront)  
+ℹ️ **Le frontend du projet est disponible ici** 👉 [Rajaefr/GestionFacturesRetour](https://github.com/Rajaefr/GestionFacturesRetour)  
 
 ## **𝗙𝗲𝗮𝘁𝘂𝗿𝗲𝘀 :**  
 ### 🖥 **API de Gestion des Factures**  
